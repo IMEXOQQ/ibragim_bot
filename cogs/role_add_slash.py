@@ -2,21 +2,17 @@ import nextcord
 import asyncio
 from settings import config
 from database import add_role, get_role, get_role_only_one
+from nextcord import Interaction, SlashOption
 from nextcord.ext import commands
 
 
-class RoleAdd(commands.Cog):
+class RoleAddSlash(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command()
-    @commands.guild_only()
+    @nextcord.slash_command(description="Добавить роль в БД")
     @commands.has_permissions(administrator=True)
-
-    async def role_add(self, ctx, role:nextcord.Role = None):
-        if role == None:
-            await ctx.send(f"Вы не задали роль!!!")
-            return
+    async def role_add(self, ctx, role:nextcord.Role = SlashOption(description="Роль", required=True)):
         guild_id = ctx.guild.id
         role_id = role.id
         if await get_role(guild_id, role_id):
@@ -35,6 +31,6 @@ class RoleAdd(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(RoleAdd(bot))
-    print("COGS | Module Role_add successfully loaded")
+    bot.add_cog(RoleAddSlash(bot))
+    print("COGS | Module Role_add_slash successfully loaded")
     

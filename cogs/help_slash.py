@@ -5,11 +5,12 @@ from database import get_lvl
 from nextcord.ext import commands
 
 
-class Help(commands.Cog):
+class HelpSlash(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    @nextcord.slash_command(description="Помощь по боту")
+    
+    @commands.command()
+    @commands.guild_only()
     @commands.has_permissions(send_messages=True)
 
     async def help(self, ctx):
@@ -35,6 +36,6 @@ class Help(commands.Cog):
         await ctx.send(embed=embed)
         
 def setup(bot):
-    bot.add_cog(Help(bot))
-    print("COGS | Module Help successfully loaded")
+    bot.add_cog(HelpSlash(bot))
+    print("COGS | Module Help_slash successfully loaded")
     

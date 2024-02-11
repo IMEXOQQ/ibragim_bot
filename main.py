@@ -36,7 +36,6 @@ class DiscordBot(commands.Bot):
 
     async def on_guild_join(self, guild: nextcord.Guild):
         await add_guild(guild.id)
-    
 
 
 
