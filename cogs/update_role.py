@@ -28,6 +28,8 @@ class UpdateRole(commands.Cog):
                     for user_data in users_id_data:
                         user_data_id = user_data[0]
                         member = guild.get_member(user_data_id)
+                        if member == None:
+                            continue
                         if role in member.roles:
                             try:
                                 await member.remove_roles(role)
