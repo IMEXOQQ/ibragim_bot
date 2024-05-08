@@ -1,1 +1,1 @@
-BOT_TOKEN = "OTIzOTMzOTkzNzc3MzY1MDUz.GyqucS.mUL513VG_wafzpwhEgTn8eUaSlDYkolYyV8EIM"
+BOT_TOKEN = ""
