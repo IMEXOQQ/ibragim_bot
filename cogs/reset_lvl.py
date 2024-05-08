@@ -5,12 +5,11 @@ from database import reset_lvl
 from nextcord.ext import commands
 
 
-class ResetLvl(commands.Cog):
+class ResetLvlSlash(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command()
-    @commands.guild_only()
+    @nextcord.slash_command(description="Обнуление уровней")
     @commands.has_permissions(administrator=True)
 
     async def reset_lvl(self, ctx):
@@ -21,6 +20,6 @@ class ResetLvl(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(ResetLvl(bot))
-    print("COGS | Module Reset_lvl successfully loaded")
+    bot.add_cog(ResetLvlSlash(bot))
+    print("COGS | Module Reset_lvl_slash successfully loaded")
     

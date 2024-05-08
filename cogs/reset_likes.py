@@ -5,12 +5,11 @@ from database import reset_likes
 from nextcord.ext import commands
 
 
-class ResetLike(commands.Cog):
+class ResetLikeSlash(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
-    @commands.command()
-    @commands.guild_only()
+
+    @nextcord.slash_command(description="Обнуление лайков")
     @commands.has_permissions(administrator=True)
 
     async def reset_likes(self, ctx):
@@ -21,6 +20,6 @@ class ResetLike(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(ResetLike(bot))
-    print("COGS | Module Reset_like successfully loaded")
+    bot.add_cog(ResetLikeSlash(bot))
+    print("COGS | Module Reset_like_slash successfully loaded")
     

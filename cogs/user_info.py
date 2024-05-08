@@ -2,22 +2,23 @@ import nextcord
 import asyncio
 from settings import config
 from database import get_lvl, get_user, add_user
+from nextcord import Interaction, SlashOption
 from nextcord.ext import commands
 
 
-class UserInfo(commands.Cog):
+class UserInfoSlash(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
-    @commands.command()
-    @commands.guild_only()
-    @commands.has_permissions(send_messages=True)
 
-    async def info(self, ctx, member:nextcord.Member = None):
+
+
+    @nextcord.slash_command(description="Вывод информации о пользователе")
+    @commands.has_permissions(send_messages=True)
+    async def info(self, interaction: Interaction, member:nextcord.Member = None):
         if member == None:
-            member = ctx.author
+            member = interaction.user
         elif member.bot:
-            await ctx.send("Ничего интересного...")
+            await interaction.response.send_message("Ничего интересного...")
             return
         
         user_id = member.id
@@ -47,11 +48,11 @@ class UserInfo(commands.Cog):
             emb.add_field(name="Уровень:", value=lvl,inline=False)
             emb.add_field(name="Опыт:", value=f"{xp} / {100*(lvl+1)*lvl}",inline=False)
             emb.set_thumbnail(url=member.avatar)
-            await ctx.send(embed = emb)
+            await interaction.response.send_message(embed = emb)
         else:
             return
 
 def setup(bot):
-    bot.add_cog(UserInfo(bot))
-    print("COGS | Module User_info successfully loaded")
+    bot.add_cog(UserInfoSlash(bot))
+    print("COGS | Module User_info_slash successfully loaded")
     

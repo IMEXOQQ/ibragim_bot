@@ -2,21 +2,18 @@ import nextcord
 import asyncio
 from settings import config
 from database import delete_channel, get_channel
+from nextcord import Interaction, SlashOption
 from nextcord.ext import commands
 
 
-class ChannelDelete(commands.Cog):
+class ChannelDeleteSlash(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
-    @commands.command()
-    @commands.guild_only()
+
+    @nextcord.slash_command(description="Удаление канала из системы лайков")
     @commands.has_permissions(administrator=True)
 
-    async def channel_delete(self, ctx, channel:nextcord.TextChannel = None):
-        if channel == None:
-            await ctx.send("Вы не ввели канал!!!")
-            return
+    async def channel_delete(self, ctx, channel:nextcord.TextChannel = SlashOption(description="Канал", required= True)):
         channel_id = channel.id
         guild_id = ctx.guild.id
         if await get_channel(guild_id, channel_id):
@@ -26,6 +23,6 @@ class ChannelDelete(commands.Cog):
             await ctx.send(f"<#{channel_id}> канал не был добавлен в БД!!!")
 
 def setup(bot):
-    bot.add_cog(ChannelDelete(bot))
-    print("COGS | Module Channel_delete successfully loaded")
+    bot.add_cog(ChannelDeleteSlash(bot))
+    print("COGS | Module Channel_delete_slash successfully loaded")
     

@@ -27,6 +27,14 @@ async def init_db():
                 "`channel_id` BIGINT NOT NULL"
                 ")"
             )
+            
+            await cur.execute(
+                "CREATE TABLE IF NOT EXISTS `blocked_channels` ("
+                "`id` INTEGER PRIMARY KEY AUTOINCREMENT,"
+                "`guild_id` BIGINT NOT NULL,"
+                "`channel_id` BIGINT NOT NULL"
+                ")"
+            )
 
             await cur.execute(
                 "CREATE TABLE IF NOT EXISTS `users` ("
@@ -248,3 +256,26 @@ async def get_time(guild_id: int, hours):
             await cur.execute(f"SELECT `update_time` FROM `roles` WHERE `guild_id` = {guild_id}")
             time = cur.fetchone
             return time[0]
+
+async def get_blocked_channel(guild_id: int, channel_id: int):
+    async with aiosqlite.connect("main.db") as db:
+        async with db.cursor() as cur:
+            await cur.execute("SELECT guild_id, channel_id FROM `blocked_channels`")
+            result = await cur.fetchall()
+            if (guild_id, channel_id) in result:
+                    return True
+            else: return False
+
+async def add_blocked_channel(guild_id: int, channel_id: int):
+    async with aiosqlite.connect("main.db") as db:
+        async with db.cursor() as cur:
+            await cur.execute("INSERT INTO `blocked_channels`(`guild_id`, `channel_id`) VALUES (?, ?)", (guild_id, channel_id,))
+            await db.commit()
+            print(f"CHANNEL: {channel_id} added to main.db -> blocked_channels")
+
+async def delete_blocked_channel(channel_id: int):
+    async with aiosqlite.connect("main.db") as db:
+        async with db.cursor() as cur:
+            await cur.execute("DELETE FROM `blocked_channels` WHERE `channel_id`={}".format(channel_id,))
+            await db.commit()
+            print(f"CHANNEL: {channel_id} deleted from main.db -> blocked_channels")
