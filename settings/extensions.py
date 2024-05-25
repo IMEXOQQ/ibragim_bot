@@ -18,6 +18,8 @@ extensions = {
         "cogs.help",
         "cogs.errors",
         "cogs.block_channel",
-        "cogs.unblock_channel"
+        "cogs.unblock_channel",
+        "cogs.profile",
+        "cogs.voice_experience"
     ],
 }

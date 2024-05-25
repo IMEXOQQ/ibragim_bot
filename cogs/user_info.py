@@ -1,8 +1,6 @@
 import nextcord
-import asyncio
-from settings import config
-from database import get_lvl, get_user, add_user
-from nextcord import Interaction, SlashOption
+from database import get_lvl
+from nextcord import Interaction
 from nextcord.ext import commands
 
 

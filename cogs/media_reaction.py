@@ -14,7 +14,7 @@ class MediaReaction(commands.Cog):
         guild_id = message.guild.id
         channel_id = message.channel.id
         if await get_channel(guild_id, channel_id):
-            if message.attachments:
+            if message.attachments and not message.author.bot:
                 emoji = '❤️'
                 await message.add_reaction(emoji)
 
