@@ -12,37 +12,52 @@ class ProfileSlash(commands.Cog):
 
 
 
-    async def create_circular_image(self, img, size, border_size, border_color=(255, 255, 255)):
-        # Увеличиваем размер для более качественного сглаживания
-        large_size = size * 4
-        large_border_size = border_size * 4
+    async def create_round_image(self, img, size):
+        img = img.convert("RGBA")
 
-        img = img.resize((large_size, large_size), Image.LANCZOS)
-        mask = Image.new('L', (large_size, large_size), 0)
+        img = img.resize((size, size), Image.LANCZOS)
+
+        mask_size = (size*3, size*3)
+        mask = Image.new('L', mask_size, 0)
         draw = ImageDraw.Draw(mask)
-        draw.ellipse((0, 0, large_size, large_size), fill=255)
-
-        circular_img = ImageOps.fit(img, (large_size, large_size), method=Image.LANCZOS)
-        circular_img.putalpha(mask)
-
-        # Создаем изображение с обводкой
-        border_size_with_image = large_size + 2 * large_border_size
-        border = Image.new('RGBA', (border_size_with_image, border_size_with_image), (255, 255, 255, 0))
-        mask = Image.new('L', (border_size_with_image, border_size_with_image), 0)
-        draw = ImageDraw.Draw(mask)
-        draw.ellipse((0, 0, border_size_with_image, border_size_with_image), fill=255)
-        border.paste(circular_img, (large_border_size, large_border_size), circular_img)
-
-        # Рисуем обводку нужного цвета
-        draw = ImageDraw.Draw(border)
-        draw.ellipse((0, 0, border_size_with_image, border_size_with_image), outline=border_color, width=large_border_size // 5)
+        draw.ellipse((0, 0, mask_size[0], mask_size[1]), fill=255)
         
-        # Уменьшаем изображение до конечного размера для лучшего сглаживания
-        border = border.resize((size + 2 * border_size, size + 2 * border_size), Image.LANCZOS)
-        
-        return border
+        mask = mask.resize((size, size), Image.LANCZOS)
 
+        img.putalpha(mask)
 
+        background = Image.new("RGBA", img.size, (255, 255, 255, 0))
+        round_img = Image.alpha_composite(background, img)
+
+        return round_img
+    
+    async def create_colored_circle_image(self, size, circle_color):
+        img = Image.new("RGBA", (size*3, size*3), (255, 255, 255, 0))
+
+        draw = ImageDraw.Draw(img)
+        draw.ellipse((0,0,size*3,size*3), fill=circle_color)
+
+        img = img.resize((size, size), Image.LANCZOS)
+
+        return img
+    
+    async def create_progress_bar(self, width, height, progress):
+
+        img = Image.new("RGBA", (width*3, height*3), (255, 255, 255, 0))
+
+        draw = ImageDraw.Draw(img)
+        border_radius = height // 2
+        draw.rounded_rectangle([(0, 0), (width*3, height*3)], fill=(146, 160, 169, 255), outline="white", width=6*3, radius=22*3)
+        if 0 <= progress <= 0.33:
+            draw.rounded_rectangle([(18, 18), ((width-6)*3*progress, (height-6)*3)], fill=(7, 239, 44, 255), outline=None, width=6*3, radius=22*3)
+        if 0.34 <= progress <= 0.74:
+            draw.rounded_rectangle([(18, 18), ((width-6)*3*progress, (height-6)*3)], fill=(251, 205, 45, 255), outline=None, width=6*3, radius=22*3)
+        if 0.75 <= progress <= 1:
+            draw.rounded_rectangle([(18, 18), ((width-6)*3*progress, (height-6)*3)], fill=(251, 45, 45, 255), outline=None, width=6*3, radius=22*3)
+
+        img = img.resize((width, height), Image.LANCZOS)
+
+        return img
 
     @nextcord.slash_command(description="Вывод информации о пользователе")
     @commands.has_permissions(send_messages=True)
@@ -58,44 +73,41 @@ class ProfileSlash(commands.Cog):
         experience = row[1]
         lvl = row[0]
         likes = row[2]
-        progress = experience / (100*(lvl+1)*lvl)        
+        progress = ((experience / (100*(lvl+1)*lvl)) // 0.01) / 100     
         avatar_url = member.avatar.url if member.avatar else member.default_avatar.url
         response = requests.get(avatar_url)
         avatar = Image.open(BytesIO(response.content))
 
-        # Создание круглой аватарки
-        border_color = (255, 255, 255)
-        avatar_with_border = await self.create_circular_image(avatar, 200, 10, border_color)
+        # наложение круглой аватарки
+        avatar = await self.create_round_image(avatar, 272)
+        img = Image.open("./image/bg.png")
+        img.paste(avatar, (64, 64), avatar)
 
-        # Создание изображения с градиентным фоном
-        img = Image.new('RGB', (800, 400), color=(0, 0, 0))
-        draw = ImageDraw.Draw(img)
-        for i in range(800):
-            color = tuple(int(colour[j] * ((800 - i) / 800)) for j in range(3))
-            draw.line((i, 0, i, 400), fill=color)
+        # наложение точки цвета роли
+        dot = await self.create_colored_circle_image(28, colour)
+        img.paste(dot, (380, 88), dot)
+
+        # наложение полоску прогресса
+        progress_bar = await self.create_progress_bar(1198, 42, progress)
+        img.paste(progress_bar, (378, 296), progress_bar)
+
+        # наложение текста
+        font = ImageFont.truetype("./fonts/Inter-Bold.ttf", 64)
+        drawer = ImageDraw.Draw(img)
+        drawer.text((424, 64), f"{member.name.upper()}", font=font, fill="white")
+
+        font = ImageFont.truetype("./fonts/Inter-Regular.ttf", 48)
+        drawer.text((424, 144), f"Level: {lvl}", font=font, fill="white")
+        drawer.text((720, 144), f"Likes: {likes}", font=font, fill="white")
         
-        # Добавление аватарки на фон
-        img.paste(avatar_with_border, (40, 100), avatar_with_border)
+        font = ImageFont.truetype("./fonts/Inter-Regular.ttf", 40)
+        drawer.text((1500, 234), f"{int(progress*100)}%", font=font, fill="white")
 
-        # Добавление текста
-        font = ImageFont.truetype("boorsok.ttf", 48)
-        draw.text((290, 100), f"{member.name}", font=font, fill=(255, 255, 255))
-        draw.text((290, 180), f"Likes: {likes}", font=font, fill=(255, 255, 255))
-        font = ImageFont.truetype("boorsok.ttf", 24)
-        draw.text((640, 230), f"{int(progress*100)}%", font=font, fill=(255, 255, 255))
-
-        # Добавление полосы загрузки
-        progress_bar_width = 400
-        progress_bar_height = 40
-        progress_x = 290
-        progress_y = 260
-        draw.rectangle([progress_x, progress_y, progress_x + progress_bar_width, progress_y + progress_bar_height], outline=(255, 255, 255), width=4)
-        draw.rectangle([progress_x, progress_y, progress_x + int(progress_bar_width * progress), progress_y + progress_bar_height], fill=(0, 255, 0))
-
-        img = img.resize((400, 200), Image.LANCZOS)
-        img.save('profile.png')
+        # изменение размера и сглаживание изображения    
+        img = img.resize((823, 200), Image.LANCZOS)
+        img.save('./image/profile.png')
         
-        await ctx.send(file=nextcord.File('profile.png'))
+        await ctx.send(file=nextcord.File('./image/profile.png'))
 
 def setup(bot):
     bot.add_cog(ProfileSlash(bot))

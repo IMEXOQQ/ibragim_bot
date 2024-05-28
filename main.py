@@ -41,7 +41,6 @@ class DiscordBot(commands.Bot):
 
 def main():
     loop = asyncio.get_event_loop()
-
     if loop.is_running():
         asyncio.ensure_future(run())
     else:
